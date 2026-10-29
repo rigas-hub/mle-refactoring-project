@@ -157,9 +157,10 @@ It is included as a reference implementation for the optional stretch task, not 
 
 ## Run the FastAPI Service
 
-The API in [service/](service/) uses SQLite, which is included with Python.
-It creates a local database file at `service/houses.db` the first time it
-starts. No database server, Docker, or `.env` configuration is needed.
+The API in [service/](service/) uses SQLite, a local database included with
+Python. It creates `service/houses.db` the first time it starts and keeps
+entries between runs. No database server, Docker, or `.env` configuration is
+needed.
 
 From the repository root, install project dependencies and run the API:
 
@@ -169,7 +170,47 @@ uv run fastapi dev
 ```
 
 Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to try the API.
-The `houses.db` file stores entries between runs and is ignored by Git.
+In the interactive docs, create a house with `POST /houses`, then request a
+prediction for the saved house with `GET /houses/{house_id}/prediction`.
+
+The service also supports:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/` | Check that the API is running. |
+| `GET` | `/houses` | List saved houses. |
+| `GET` | `/houses/{house_id}` | Get one saved house. |
+| `POST` | `/houses` | Save a house. |
+| `PUT` | `/houses/{house_id}` | Replace a saved house's feature values. |
+| `DELETE` | `/houses/{house_id}` | Delete a saved house. |
+| `GET` | `/houses/{house_id}/prediction` | Predict the price of a saved house. |
+
+For example, the `POST /houses` request body is:
+
+```json
+{
+  "id": 1,
+  "bedrooms": 3,
+  "grade": 7,
+  "last_known_change": 2015,
+  "center_distance": 2.5
+}
+```
+
+The prediction endpoint reads `grade`, `last_known_change`, and
+`center_distance` from that saved house and sends them to the trained model.
+The model file must be at `model/model.bin` in the project root. The SQLite
+database file is ignored by Git.
+
+The service code is split into a few small parts:
+
+- [service/main.py](service/main.py) defines the API endpoints and connects a
+  saved house to the prediction model.
+- [service/schemas.py](service/schemas.py) defines the request and response
+  data shapes.
+- [service/models.py](service/models.py) describes how houses are stored.
+- [service/database.py](service/database.py) configures SQLite and provides a
+  database session to each request.
 
 ## Project Reflection
 
@@ -181,9 +222,9 @@ preprocessing steps into reusable transformers and a scikit-learn pipeline,
 trained a model using selected features, and added a script to make predictions
 with the saved model.
 
-As an additional challenge, I began building a simple FastAPI service backed by
-a database containing house data. The longer-term goal is to use data submitted
-to the service to generate house-price predictions.
+As an additional challenge, I built a simple FastAPI service backed by a local
+SQLite database. It can save house data and use a saved house's features to
+request a house-price prediction from the trained model.
 
 ### What challenges did you face?
 

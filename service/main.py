@@ -8,6 +8,14 @@ from sqlalchemy.orm import Session
 from service import models, schemas
 from service.database import Base, engine, get_db
 
+import pandas as pd
+import skops.io as sio
+
+from pathlib import Path
+
+MODEL_PATH = Path(__file__).resolve().parents[1] / "model" / "model.bin"
+
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
@@ -84,3 +92,29 @@ def delete_house(house_id: int, db: Session = Depends(get_db)) -> Response:
     db.delete(house)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.get("/houses/{house_id}/prediction")
+def predict_house_price(
+    house_id: int,
+    db: Session = Depends(get_db),
+) -> dict[str, int | float]:
+    house = get_house_or_404(db, house_id)
+
+    if not MODEL_PATH.is_file():
+        raise HTTPException(
+            status_code=503,
+            detail="Prediction model not found. Train the model first.",
+        )
+
+    with MODEL_PATH.open("rb") as model_file:
+        model = sio.load(model_file)
+
+    features = pd.DataFrame([{
+        "grade": house.grade,
+        "last_known_change": house.last_known_change,
+        "center_distance": house.center_distance,
+    }])
+
+    price = float(model.predict(features)[0])
+    return {"house_id": house.id, "predicted_price": price}
