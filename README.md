@@ -169,7 +169,7 @@ The service code is split into a few small parts:
 - [service/database.py](service/database.py) configures SQLite and provides a
   database session for each request.
 
-## Project Reflection
+## Project Reflection (as submitted on 29 October 2026)
 
 ### What steps did you take to complete the project?
 
