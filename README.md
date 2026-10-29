@@ -1,16 +1,16 @@
 # Refactoring Project
 
-Use this repository as a **template** for your refactoring project. It walks you through turning a working but messy notebook into clean, reusable Python code: the notebook analyzes King County house sales, and your job is to extract its data cleaning and feature engineering logic into a proper pipeline. Create pull requests in your own copy even if you are working alone, and use them to track your progress.
+This repository is a **learning template for refactoring a data science project**. It starts with a notebook that analyzes King County house sales and guides you in moving its data-cleaning and feature-engineering steps into reusable Python code. The main project goal is to build a pipeline that prepares the data consistently; model training, predictions, and the FastAPI service show how that prepared data can be used in a wider application.
 
-## Learning Objectives
+## Project Goal and Learning Objectives
 
-By the end of this repository, you should be able to:
+The primary goal is to refactor the notebook's data preparation into a reusable pipeline. As you work through the project, you will learn to:
 
-- Read and understand an existing Data Science notebook well enough to refactor it.
-- Refactor data cleaning and feature engineering code into reusable Python functions.
-- Build a pipeline that reproduces a notebook's preprocessing steps end to end.
+- Understand an existing data science notebook well enough to identify and extract its preprocessing steps.
+- Organize data cleaning and feature engineering into reusable Python functions.
+- Build and run a pipeline that prepares the house-price data.
 - Train a model and use it to predict house prices.
-- Build a FastAPI service that stores house data locally and predicts prices for saved houses.
+- Store house data in a local database and expose it through a FastAPI service that can return predictions.
 
 ## Learning Path
 
