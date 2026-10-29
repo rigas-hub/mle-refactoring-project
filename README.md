@@ -106,6 +106,35 @@ code .
 
 Then open [King-County.ipynb](King-County.ipynb) and select the Python environment created by `uv sync` as the kernel.
 
+---
+
+### 6. Clean the data and create features
+
+The `data_preperation_pipeline(data_path)` function in
+[src/data_pipeline.py](src/data_pipeline.py) reads the CSV file, applies the
+data-cleaning and feature-engineering transformers, and returns the resulting
+DataFrame. It can be called from other Python code and is used by the
+model-training workflow.
+
+### 7. Train the model
+
+Run the model-training script from the project root. It calls the data
+preparation function, trains a linear regression model, prints its test score
+and a sample prediction, and saves the trained model.
+
+```bash
+uv run python src/model_training.py
+```
+
+### 8. Make a prediction
+
+After training, run the prediction script to load the saved model and predict
+a house price from the sample features defined in the script:
+
+```bash
+uv run python src/prediction_app.py
+```
+
 ## How to Use This Repo
 
 1. Read the assignment brief in [project-description.md](project-description.md).
@@ -125,3 +154,42 @@ The [bonus_solution/](bonus_solution/) folder contains a minimal working example
 - a `docker-compose.yaml` file to run the API and database together
 
 It is included as a reference implementation for the optional stretch task, not as a required project structure.
+
+## Project Reflection
+
+### What steps did you take to complete the project?
+
+I started by exploring the notebook, identifying data-quality issues, and
+deciding how to clean the data and create useful features. I then moved the
+preprocessing steps into reusable transformers and a scikit-learn pipeline,
+trained a model using selected features, and added a script to make predictions
+with the saved model.
+
+As an additional challenge, I began building a simple FastAPI service backed by
+a database containing house data. The longer-term goal is to use data submitted
+to the service to generate house-price predictions.
+
+### What challenges did you face?
+
+Moving exploratory notebook code into Python modules required me to think about
+software structure, dependencies, and how to make the workflow straightforward
+to run. Learning to build and use data-processing pipelines was new to me and
+became one of the most valuable parts of the project.
+
+The API and database work was also challenging because I had limited experience
+with those technologies. It gave me an opportunity to learn how a service might
+receive and store house data.
+
+### What would you do differently with more time?
+
+I would improve the project’s usability, expand the tests, and explore the
+modeling process further. The current modeling work focuses mainly on refactoring
+the notebook’s workflow rather than comparing and tuning a broader range of
+models. The existing test coverage is limited, so I would add tests to verify
+the behavior of the preprocessing pipeline, model training, and prediction
+workflow. I would also like to add more documentation to the code. It may not
+be the most exciting part of engineering, but it would make the project easier
+for others (and future me) to understand and maintain.
+
+This project is still a work in progress, and I plan to continue improving it.
+I learned a lot while working on it and would welcome constructive feedback.
