@@ -9,8 +9,8 @@ By the end of this repository, you should be able to:
 - Read and understand an existing Data Science notebook well enough to refactor it.
 - Refactor data cleaning and feature engineering code into reusable Python functions.
 - Build a pipeline that reproduces a notebook's preprocessing steps end to end.
-- Apply the same refactoring approach to a modeling workflow (stretch goal).
-- Build and containerize a FastAPI CRUD service backed by a database (stretch goal).
+- Train a model and use it to predict house prices.
+- Build a FastAPI service that stores house data locally and predicts prices for saved houses.
 
 ## Learning Path
 
@@ -23,20 +23,21 @@ By the end of this repository, you should be able to:
 
 | File / Folder | Description |
 |---|---|
-| [**data**](data/) | The King County house price dataset used by the notebook. |
-| [**assets**](assets/) | Visual aids referenced in the repository. |
-| [**bonus_solution**](bonus_solution/) | A FastAPI + Postgres + Docker reference implementation for the optional CRUD stretch goal. |
-| [**pyproject.toml**](pyproject.toml) | Project configuration and dependencies. |
-| [**uv.lock**](uv.lock) | Dependency lock file. |
+| [**data/**](data/) | King County house price dataset used for data preparation and model training. |
+| [**assets/**](assets/) | Visual aids referenced by the project. |
+| [**src/**](src/) | Data preparation, feature engineering, model training, and standalone prediction scripts. |
+| [**service/**](service/) | FastAPI endpoints, SQLite database setup, and house data models. The local `houses.db` database is created when the service starts. |
+| [**model/**](model/) | Trained model saved as `model.bin`; used by the prediction scripts and FastAPI endpoint. |
+| [**tests/**](tests/) | Tests for the data preparation pipeline and FastAPI service. |
+| [**.python-version**](.python-version) | Python version range used by the project. |
+| [**pyproject.toml**](pyproject.toml) | Project metadata, dependencies, and FastAPI entry point. |
+| [**uv.lock**](uv.lock) | Locked dependency versions for reproducible setup. |
 
 ## Setup
 
 Use [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.13.5 or newer
 and Python 3.13.17 or a newer 3.13 patch release, as defined in
 [`.python-version`](.python-version).
-
-Rebuild existing Docker images with `--pull --no-cache` after this update
-to refresh their system certificates and dependencies.
 
 > [!NOTE]
 > Throughout these steps, text in angle brackets like `<repo-name>` is a **placeholder**. Replace it, including the `< >` brackets, with your own value. For example, `cd <repo-name>` becomes `cd mle-refactoring-project`.
@@ -106,111 +107,67 @@ code .
 
 Then open [King-County.ipynb](King-County.ipynb) and select the Python environment created by `uv sync` as the kernel.
 
----
-
-### 6. Clean the data and create features
-
-The `data_preperation_pipeline(data_path)` function in
-[src/data_pipeline.py](src/data_pipeline.py) reads the CSV file, applies the
-data-cleaning and feature-engineering transformers, and returns the resulting
-DataFrame. It can be called from other Python code and is used by the
-model-training workflow.
-
-### 7. Train the model
-
-Run the model-training script from the project root. It calls the data
-preparation function, trains a linear regression model, prints its test score
-and a sample prediction, and saves the trained model.
-
-```bash
-uv run python src/model_training.py
-```
-
-### 8. Make a prediction
-
-After training, run the prediction script to load the saved model and predict
-a house price from the sample features defined in the script:
-
-```bash
-uv run python src/prediction_app.py
-```
-
 ## How to Use This Repo
 
 1. Read the assignment brief in [project-description.md](project-description.md).
 2. Work through the notebook in [King-County.ipynb](King-County.ipynb).
-3. Refactor the cleaning and feature engineering logic into Python files.
-4. Build a reusable pipeline.
-5. If you want an extra challenge, extend your refactor to cover the modeling step as well.
-6. If you want to go even further, use [bonus_solution/](bonus_solution/) as a reference for the optional FastAPI + Docker stretch goal.
+3. Use `data_preperation_pipeline(data_path)` in
+   [src/data_pipeline.py](src/data_pipeline.py) to clean the data and create
+   features. It reads the CSV and returns a prepared DataFrame.
+4. Train and save the model from the project root:
 
-## Bonus Solution
+   ```powershell
+   uv run python src/model_training.py
+   ```
 
-The [bonus_solution/](bonus_solution/) folder contains a minimal working example of:
+   The training script reports an evaluation score and saves the trained model
+   as `model/model.bin`. To run the standalone sample prediction script:
 
-- a FastAPI CRUD API
-- Postgres persistence
-- a `Dockerfile` for the API
-- a `docker-compose.yaml` file to run the API and database together
+   ```powershell
+   uv run python src/prediction_app.py
+   ```
 
-It is included as a reference implementation for the optional stretch task, not as a required project structure.
+5. Start the FastAPI app from the project root:
 
-## Run the FastAPI Service
+   ```powershell
+   uv run fastapi dev
+   ```
 
-The API in [service/](service/) uses SQLite, a local database included with
-Python. It creates `service/houses.db` the first time it starts and keeps
-entries between runs. No database server, Docker, or `.env` configuration is
-needed.
+   The service uses SQLite and creates `service/houses.db` automatically.
+   Entries are kept between runs; no database server or `.env` configuration
+   is needed. Open
+   [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to try the API.
 
-From the repository root, install project dependencies and run the API:
+6. In the interactive docs, create a house using `POST /houses`. For example:
 
-```powershell
-uv sync
-uv run fastapi dev
-```
+   ```json
+   {
+     "id": 1,
+     "bedrooms": 3,
+     "grade": 7,
+     "last_known_change": 2015,
+     "center_distance": 2.5
+   }
+   ```
 
-Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to try the API.
-In the interactive docs, create a house with `POST /houses`, then request a
-prediction for the saved house with `GET /houses/{house_id}/prediction`.
+7. Request a price prediction for that saved entry using
+   `GET /houses/{house_id}/prediction`. For the example above, request
+   `GET /houses/1/prediction`. The endpoint reads `grade`,
+   `last_known_change`, and `center_distance` from the saved house and sends
+   those features to the model at `model/model.bin`.
 
-The service also supports:
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/` | Check that the API is running. |
-| `GET` | `/houses` | List saved houses. |
-| `GET` | `/houses/{house_id}` | Get one saved house. |
-| `POST` | `/houses` | Save a house. |
-| `PUT` | `/houses/{house_id}` | Replace a saved house's feature values. |
-| `DELETE` | `/houses/{house_id}` | Delete a saved house. |
-| `GET` | `/houses/{house_id}/prediction` | Predict the price of a saved house. |
-
-For example, the `POST /houses` request body is:
-
-```json
-{
-  "id": 1,
-  "bedrooms": 3,
-  "grade": 7,
-  "last_known_change": 2015,
-  "center_distance": 2.5
-}
-```
-
-The prediction endpoint reads `grade`, `last_known_change`, and
-`center_distance` from that saved house and sends them to the trained model.
-The model file must be at `model/model.bin` in the project root. The SQLite
-database file is ignored by Git.
+The API also lets you list houses (`GET /houses`), retrieve one house
+(`GET /houses/{house_id}`), replace its feature values
+(`PUT /houses/{house_id}`), and delete it (`DELETE /houses/{house_id}`).
 
 The service code is split into a few small parts:
 
-- [service/main.py](service/main.py) defines the API endpoints and connects a
-  saved house to the prediction model.
-- [service/schemas.py](service/schemas.py) defines the request and response
-  data shapes.
+- [service/main.py](service/main.py) defines the API endpoints, including
+  prediction for a saved house.
+- [service/schemas.py](service/schemas.py) defines the request and response data.
 - [service/models.py](service/models.py) describes how houses are stored.
 - [service/database.py](service/database.py) configures SQLite and provides a
-  database session to each request.
+  database session for each request.
 
 ## Project Reflection
 
@@ -222,9 +179,9 @@ preprocessing steps into reusable transformers and a scikit-learn pipeline,
 trained a model using selected features, and added a script to make predictions
 with the saved model.
 
-As an additional challenge, I built a simple FastAPI service backed by a local
-SQLite database. It can save house data and use a saved house's features to
-request a house-price prediction from the trained model.
+I also built a simple FastAPI service backed by a local SQLite database. It
+saves house data and uses a saved house's features to request a house-price
+prediction from the trained model.
 
 ### What challenges did you face?
 
