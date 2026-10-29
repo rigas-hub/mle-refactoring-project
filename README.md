@@ -155,6 +155,22 @@ The [bonus_solution/](bonus_solution/) folder contains a minimal working example
 
 It is included as a reference implementation for the optional stretch task, not as a required project structure.
 
+## Run the FastAPI Service
+
+The API in [service/](service/) uses SQLite, which is included with Python.
+It creates a local database file at `service/houses.db` the first time it
+starts. No database server, Docker, or `.env` configuration is needed.
+
+From the repository root, install project dependencies and run the API:
+
+```powershell
+uv sync
+uv run fastapi dev
+```
+
+Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to try the API.
+The `houses.db` file stores entries between runs and is ignored by Git.
+
 ## Project Reflection
 
 ### What steps did you take to complete the project?

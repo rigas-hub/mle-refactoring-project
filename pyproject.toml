@@ -10,6 +10,9 @@ dependencies = [
     "seaborn>=0.13.2",
     "skops>=0.14.0",
     "fastapi[standard]>=0.141.1",
+    "psycopg[binary]>=3.3.5",
+    "python-dotenv>=1.2.3",
+    "sqlalchemy>=2.0.52",
 ]
 
 [dependency-groups]
@@ -25,4 +28,4 @@ required-version = ">=0.13.5"
 constraint-dependencies = ["certifi>=2026.10.19", "pip>=26.2.2"]
 
 [tool.fastapi]
-entrypoint = "src.main:app"
+entrypoint = "service.main:app"

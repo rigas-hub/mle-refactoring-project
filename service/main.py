@@ -1,29 +1,26 @@
-from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException, status, Response
-from pydantic import BaseModel
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from service import models, schemas
 from service.database import Base, engine, get_db
 
-app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    Base.metadata.create_all(bind=engine)
+    yield
 
-DatabaseSession = Annotated[Session, Depends(get_db)]
 
-class House(BaseModel):
-    id: int
-    bedrooms: int
-    grade: int
-    last_known_change: int
-    center_distance: float
+app = FastAPI(lifespan=lifespan)
 
-def get_house_or_404(db: Session, house_id: int) -> House:
+
+def get_house_or_404(db: Session, house_id: int) -> models.House:
     """Return one house or raise the public not-found response."""
-    house = db.get(House, house_id)
+    house = db.get(models.House, house_id)
     if house is None:
         raise HTTPException(status_code=404, detail="House not found")
     return house
@@ -34,33 +31,56 @@ def index() -> dict[str, str]:
     """Return a lightweight service status response."""
     return {"status": "ok"}
 
-@app.get("/houses", response_model=list[House])
-def get_all_houses(db: DatabaseSession) -> list[House]:
+
+@app.get("/houses", response_model=list[schemas.House])
+def get_all_houses(db: Session = Depends(get_db)) -> list[models.House]:
     """Return all persisted houses ordered by identifier."""
-    statement = select(House).order_by(House)
+    statement = select(models.House).order_by(models.House.id)
     return list(db.scalars(statement))
 
-@app.get("/houses/{house_id}", response_model=House)
-def get_house(house_id: int, db: DatabaseSession) -> House:
+
+@app.get("/houses/{house_id}", response_model=schemas.House)
+def get_house(house_id: int, db: Session = Depends(get_db)) -> models.House:
     """Return one persisted house by identifier."""
     return get_house_or_404(db, house_id)
 
-@app.post("/houses", response_model=House, status_code=status.HTTP_201_CREATED)
-def create_house(request: House, db: DatabaseSession) -> House:
+
+@app.post(
+    "/houses", response_model=schemas.House, status_code=status.HTTP_201_CREATED
+)
+def create_house(
+    request: schemas.House, db: Session = Depends(get_db)
+) -> models.House:
     """Persist a new house."""
-    new_house = House(id=request.id, bedrooms=request.bedrooms, grade=request.grade, 
-                     last_known_change=request.last_known_change, center_distance=request.center_distance)
+    new_house = models.House(**request.model_dump())
     db.add(new_house)
     db.commit()
     db.refresh(new_house)
     return new_house
 
+
+@app.put("/houses/{house_id}", response_model=schemas.House)
+def update_house(
+    house_id: int,
+    request: schemas.HouseUpdate,
+    db: Session = Depends(get_db),
+) -> models.House:
+    """Replace the editable fields of one house."""
+    house = get_house_or_404(db, house_id)
+
+    for field, value in request.model_dump().items():
+        setattr(house, field, value)
+
+    db.commit()
+    db.refresh(house)
+    return house
+
+
 @app.delete("/houses/{house_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_house(house_id: int, db: DatabaseSession) -> Response:
+def delete_house(house_id: int, db: Session = Depends(get_db)) -> Response:
     """Delete one house or return 404 when it does not exist."""
     house = get_house_or_404(db, house_id)
 
     db.delete(house)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-

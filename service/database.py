@@ -1,18 +1,12 @@
-import os
 from collections.abc import Generator
+from pathlib import Path
 
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-load_dotenv()
-
-DATABASE_URL = os.getenv("DB_CONN")
-
-if DATABASE_URL is None:
-    raise ValueError("DB_CONN environment variable is required")
-
-engine = create_engine(DATABASE_URL)
+DATABASE_PATH = Path(__file__).resolve().with_name("houses.db")
+DATABASE_URL = URL.create("sqlite", database=str(DATABASE_PATH))
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 
 
