@@ -1,9 +1,6 @@
-from pathlib import Path
 import pandas as pd
-
-import os
-
 import skops.io as sio
+
 
 def main() -> None:
 

@@ -1,9 +1,11 @@
 from pathlib import Path
+
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from data_preperation import fill_missings_view_wf, \
-    sqft_basement, calculate_last_change
+
+from data_preperation import calculate_last_change, fill_missings_view_wf, sqft_basement
 from feature_engineering import dist_to_center_of_wealth, dist_to_water
+
 
 class FillingMissingValuesTransformer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):

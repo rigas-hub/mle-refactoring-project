@@ -1,15 +1,18 @@
-from pathlib import Path
-import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from transformers import FillingMissingValuesTransformer,\
-      RebuildingSqftBasementTransformer, CalculateLastChangeTransformer, \
-      DistToWealthCenterTransformer
-
 import os
+from pathlib import Path
 
+import pandas as pd
 import skops.io as sio
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+
+from transformers import (
+     CalculateLastChangeTransformer,
+     DistToWealthCenterTransformer,
+     FillingMissingValuesTransformer,
+     RebuildingSqftBasementTransformer,
+)
 
 
 def data_preperation_pipeline(data_path):

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def dist_to_center_of_wealth(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.copy()

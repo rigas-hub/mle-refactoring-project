@@ -1,9 +1,10 @@
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
 
 from src.data_preperation import fill_missings_view_wf
+
 
 @pytest.mark.parametrize(
     "input_frame, expected_result",

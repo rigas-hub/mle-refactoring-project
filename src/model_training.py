@@ -1,16 +1,13 @@
+import os
 from pathlib import Path
+
 import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split
+import skops.io as sio
 from sklearn.linear_model import LinearRegression
-from transformers import FillingMissingValuesTransformer,\
-      RebuildingSqftBasementTransformer, CalculateLastChangeTransformer, \
-      DistToWealthCenterTransformer
+from sklearn.model_selection import train_test_split
+
 from data_pipeline import data_preperation_pipeline
 
-import os
-
-import skops.io as sio
 
 def linear_regressor_model(df: pd.DataFrame, features: list, target: str) -> str:
     
